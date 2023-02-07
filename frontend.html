@@ -1,57 +1,132 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cash Register</title>
-    <script src="backend.js" defer></script>
+  <title>Cash Register HTML Example</title>
 </head>
 <body>
     <h1>Cash Register</h1>
-    <div>
-        <h3>Price</h3>
-        <input type="text" id="inputValue">
-        <input type="submit" value="Submit" onclick="updateCost(inputValue)">
-    </div>
-    <div>
-        <h3>Your Money</h3>
-        <input type="text" id="inputValue2">
-        <input type="submit" value="Submit" onclick="updateCash(inputValue2)">
-    </div>
-    <div>
-        <h3>Till Balance</h3>
-        <p>PENNY</p>
-        <input type="text" id="PENNY">
-        <input type="submit" value="Submit" onclick="PENNY()">
-        <p>NICKEL</p>
-        <input type="text" id="NICKEL">
-        <input type="submit" value="Submit" onclick="NICKEL()">
-        <p>DIME</p>
-        <input type="text" id="DIME">
-        <input type="submit" value="Submit" onclick="DIME()">
-        <p>QUARTER</p>
-        <input type="text" id="QUARTER">
-        <input type="submit" value="Submit" onclick="QUARTER()">
-        <p>ONE</p>
-        <input type="text" id="ONE">
-        <input type="submit" value="Submit" onclick="ONE()">
-        <p>FIVE</p>
-        <input type="text" id="FIVE">
-        <input type="submit" value="Submit" onclick="FIVE()">
-        <p>TEN</p>
-        <input type="text" id="TEN">
-        <input type="submit" value="Submit" onclick="TEN()">
-        <p>TWENTY</p>
-        <input type="text" id="TWENTY">
-        <input type="submit" value="Submit" onclick="TWENTY()">
-        <p>ONE HUNDRED</p>
-        <input type="text" id="ONEHUNDRED">
-        <input type="submit" value="Submit" onclick="ONEHUNDRED()">
-    </div>
-    <div>
-        <h3>Calculate!</h3>
-        <input type="submit" value="Submit" onclick="calculate()">
-    </div>
+    Purchase Price: <input type="text" id="purchase-price" value="50" />
+    Payment: <input type="text" id="payment" value="40" />
+    <button id="calculate-change-button">Calculate Change</button>
+    <br />
+    Change: <span id="result"></span>
+<script>
+// This code adds an event listener to the calculate button that triggers the calculateChange function
+// when the button is clicked.
+// The DOMContentLoaded event is used to make sure the DOM is fully loaded before accessing the elements
+// with the specified ids.
+document.addEventListener('DOMContentLoaded', function () {
+  const purchasePriceInput = document.getElementById('purchase-price');
+  const paymentInput = document.getElementById('payment');
+  const calculateButton = document.getElementById('calculate-change-button');
+  // Check if all the required elements are found in the DOM.
+  if (purchasePriceInput && paymentInput && calculateButton) {
+    // Attach the calculateChange function to the click event of the calculate button.
+    calculateButton.addEventListener('click', calculateChange);
+  }
+});
+// The calculateChange function calculates the change due to a customer.
+function calculateChange() {
+  // Get the purchase price and payment values from the input fields.
+  const price = Number(document.querySelector("#purchase-price").value);
+  const tendered = Number(document.querySelector("#payment").value);
+  // Call the cashRegister function to calculate the change.
+  const result = cashRegister(price, tendered, [
+    ["PENNY", 1.01],
+    ["NICKEL", 2.05],
+    ["DIME", 3.1],
+    ["QUARTER", 4.25],
+    ["ONE", 90],
+    ["FIVE", 55],
+    ["TEN", 20],
+    ["TWENTY", 60],
+    ["ONE HUNDRED", 100]
+  ]);
+  // Update the result element with the JSON string representation of the result.
+  document.querySelector("#result").innerHTML = JSON.stringify(result);
+}
+  function cashRegister(price, cash, cid) {
+  // Object literal mapping the different denominations of currency to their values
+  const denoms = {
+    "PENNY": 0.01,
+    "NICKEL": 0.05,
+    "DIME": 0.1,
+    "QUARTER": 0.25,
+    "ONE": 1,
+    "FIVE": 5,
+    "TEN": 10,
+    "TWENTY": 20,
+    "ONE HUNDRED": 100
+  };
+  // Initializing the result object
+  const result = {
+    status: "", // Will contain the status of the transaction: OPEN, CLOSED, INSUFFICIENT_FUNDS, or INCORRECT_PAYMENT
+    change: [] // Will contain the change to be returned to the customer
+  };
+  // If the customer has not given enough money, return "INCORRECT_PAYMENT"
+  if (cash < price) {
+    result.status = "INCORRECT_PAYMENT";
+    return result;
+  }
+  // Calculate the change due to the customer
+  let changeDue = cash - price;
+  // Calculate the total amount of cash in the drawer
+  const totalCid = cid.reduce((acc, curr) => acc + curr[1], 0);
+  // If the total amount of cash in the drawer is less than the change due, return INSUFFICIENT_FUNDS
+  if (totalCid < changeDue) {
+    result.status = "INSUFFICIENT_FUNDS";
+    return result;
+  }
+  // If the total amount of cash in the drawer is equal to the change due, return the entire drawer and set the
+  if (totalCid === changeDue) {
+    result.status = "CLOSED";
+    result.change = cid;
+    return result;
+  }
+  // Reverse the cid array to start from the highest denomination of currency first
+  cid = cid.reverse();
+  // Loop through each denomination in the cid array
+  for (let i = 0; i < cid.length; i++) {
+    const denom = cid[i][0]; // Denomination name
+    const value = denoms[denom]; // Denomination value
+    let count = 0; // Count of the current denomination
+    // While there is still change due and the current denomination is available in the drawer, give the customer the maximum possible number of that denomination
+    while (changeDue >= value && cid[i][1] >= value) {
+      changeDue -= value;
+      changeDue = Math.round(changeDue * 100) / 100; // Round off the change due to 2 decimal places
+      cid[i][1] -= value;
+      count++;
+    }
+    // If any of the current denomination was given to the customer, add it to the result change array
+    if (count > 0) {
+      result.change.unshift([denom, count * value]);
+    }3
+  }
+  // If there is still change due after all calculations, it means the cashier doesn't have enough change
+  // so return status "INSUFFICIENT_FUNDS" and an empty change array
+  if (changeDue > 0) {
+    result.status = "INSUFFICIENT_FUNDS";
+    result.change = [];
+    return result;
+  }
+  // If there is no change due, it means the payment was correct and there is enough change to give
+  // so return status "OPEN" and the calculated change
+  result.status = "OPEN";
+  return result;
+}
+// Log the result of calling the `cashRegister` function
+// with the arguments: price = 3.26, cash = 100, cid = [
+console.log(cashRegister(3.26, 100, [
+    ["PENNY", 1.01],
+    ["NICKEL", 2.05],
+    ["DIME", 3.1],
+    ["QUARTER", 4.25],
+    ["ONE", 90],
+    ["FIVE", 55],
+    ["TEN", 20],
+    ["TWENTY", 60],
+    ["ONE HUNDRED", 100]
+]));
+</script>
 </body>
 </html>
