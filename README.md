@@ -2,4 +2,7 @@
 
 Leave any notes here if needed.
 
-Test Commit
+Team Members: Gurdev, Teddy, Fritz, Jeff
+
+-Completed Coding rooms part
+-Completed Webpage UI
